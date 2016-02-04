@@ -1,0 +1,38 @@
+Using Jaccard, given a product bought by a client, recommend N ranked products to the client.
+(We can do the same with pearson similarity)
+
+
+import pandas as pd
+import numpy as np
+
+# Import Data
+
+produits=pd.read_csv("C:/Users/utilisateur/Desktop/Ekimetrics/Ekimetrics/Produits.csv", sep=";")
+short=pd.read_csv("C:/Users/utilisateur/Desktop/Ekimetrics/Ekimetrics/Short.csv", sep=";")
+
+# Clean 'ProductReference' column
+
+short.ProductReference=short["ProductReference"].map(str.strip)
+short.ClientCode=short["ClientCode"].map(str.strip)
+short.TransactionType=short["TransactionType"].map(str.strip)
+
+
+
+# Given 2 products, jaccard_similarity gives their Jaccard similarity 
+
+def jaccard_similarity(product1, product2):
+    product_1_buyers=short[short.ProductReference==product1].ClientCode.unique()
+    product_2_buyers=short[short.ProductReference==product2].ClientCode.unique()
+    common_buyers=set(product_1_buyers).intersection(product_2_buyers)
+    jaccard = len(common_buyers)/max(len(product_1_buyers), len(product_2_buyers))
+
+    return jaccard
+
+# Given a product purchased, top gives the top N recommended products, for any chosen N
+
+def top(product, number):
+    Index = short.ProductReference.unique().tolist()
+    together = pd.DataFrame([[mjaccard_similarity(i, product),i] for i in Index])
+    together.columns = ['mjaccardSimilarity', 'Produit']
+    together = together.sort_values(['mjaccardSimilarity'], ascending=False).head(number + 1)
+    return together
